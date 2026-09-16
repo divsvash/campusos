@@ -1,0 +1,6 @@
+{
+  "name": "CampusOS",
+  "description": "Spatial campus wayfinding instrument, architectural cutaway diagram, and transit schedule.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

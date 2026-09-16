@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Inter', Arial, sans-serif;
+    background-color: #F2F0E9;
+    color: #121212;
+  }
+  
+  code, pre, .font-mono {
+    font-family: 'IBM Plex Mono', monospace;
+  }
+}
+
+/* Precise thin architectural scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #E8E5DC;
+}
+::-webkit-scrollbar-thumb {
+  background: #C9C6BC;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #696861;
+}
+
+@keyframes routeFlow {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+.animate-route-flow {
+  animation: routeFlow 0.9s linear infinite;
+}
+
+/* Transit pulse */
+@keyframes transitPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+}
+
+.animate-transit-pulse {
+  animation: transitPulse 2s ease-in-out infinite;
+}
