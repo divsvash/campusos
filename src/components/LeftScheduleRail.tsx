@@ -1,20 +1,21 @@
 import React from 'react';
 import { ArrowRight, Clock, MapPin } from 'lucide-react';
-import { TransitStation } from '../types';
+import { TransitStation, Weekday } from '../types';
 
 interface LeftScheduleRailProps {
   schedule: TransitStation[];
+  day: Weekday;
   selectedRoomCode?: string;
   onLocateRoom: (roomCode: string, floorId: string) => void;
 }
 
 export const LeftScheduleRail: React.FC<LeftScheduleRailProps> = ({
   schedule,
+  day,
   selectedRoomCode,
   onLocateRoom,
 }) => {
-  // Identify next class (default LH 406)
-  const nextClass = schedule.find((s) => s.status === 'NEXT') || schedule[1];
+  const nextClass = schedule.find((s) => s.status === 'NEXT') || schedule.find((s) => s.status === 'NOW') || schedule[0];
 
   return (
     <div
@@ -25,7 +26,7 @@ export const LeftScheduleRail: React.FC<LeftScheduleRailProps> = ({
       <div className="p-4 border-b border-[#C9C6BC]">
         <div className="flex items-center justify-between">
           <h2 className="text-xs font-mono font-bold tracking-widest text-[#121212] uppercase">
-            TODAY / MONDAY
+            TODAY / {day}
           </h2>
           <span className="text-[10px] font-mono text-[#696861] uppercase">
             {schedule.length} SESSIONS
@@ -52,15 +53,16 @@ export const LeftScheduleRail: React.FC<LeftScheduleRailProps> = ({
           </div>
 
           <div className="text-xs font-mono text-[#696861] mb-3">
-            {nextClass.roomCode} · ACADEMIC BLOCK · LEVEL {nextClass.floorId}
+            {nextClass.roomCode} · ACADEMIC BLOCK{nextClass.floorId ? ` · LEVEL ${nextClass.floorId}` : ' · FLOOR UNCONFIRMED'}
           </div>
 
           <button
             type="button"
             onClick={() => onLocateRoom(nextClass.roomCode, nextClass.floorId)}
-            className="w-full h-8 px-3 bg-[#121212] hover:bg-[#153E90] text-[#FFFFFF] text-xs font-mono uppercase tracking-wider flex items-center justify-between transition-colors cursor-pointer"
+            disabled={!nextClass.floorId}
+            className="w-full h-8 px-3 bg-[#121212] hover:bg-[#153E90] disabled:bg-[#696861] disabled:cursor-not-allowed text-[#FFFFFF] text-xs font-mono uppercase tracking-wider flex items-center justify-between transition-colors cursor-pointer"
           >
-            <span>LOCATE ROOM</span>
+            <span>{nextClass.floorId ? 'LOCATE ROOM' : 'ROOM NEEDS FLOOR'}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -108,8 +110,8 @@ export const LeftScheduleRail: React.FC<LeftScheduleRailProps> = ({
               return (
                 <div
                   key={station.id}
-                  onClick={() => onLocateRoom(station.roomCode, station.floorId)}
-                  className={`relative cursor-pointer group transition-colors ${
+                  onClick={() => station.floorId && onLocateRoom(station.roomCode, station.floorId)}
+                  className={`relative group transition-colors ${station.floorId ? 'cursor-pointer' : 'cursor-default'} ${
                     isSelected ? 'pl-2 -ml-2 bg-[#E8EEF8]/60 py-1' : ''
                   }`}
                 >
@@ -137,7 +139,7 @@ export const LeftScheduleRail: React.FC<LeftScheduleRailProps> = ({
                   <div className="flex items-center gap-2 mt-1 text-[11px] font-mono text-[#696861]">
                     <span className="font-semibold text-[#153E90]">{station.roomCode}</span>
                     <span>·</span>
-                    <span>LEVEL {station.floorId}</span>
+                    <span>{station.floorId ? `LEVEL ${station.floorId}` : 'FLOOR UNCONFIRMED'}</span>
                   </div>
                 </div>
               );

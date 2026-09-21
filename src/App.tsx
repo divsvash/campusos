@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { TopUtilityBar } from './components/TopUtilityBar';
 import { LeftScheduleRail } from './components/LeftScheduleRail';
 import { CentralSpatialCanvas } from './components/CentralSpatialCanvas';
@@ -22,10 +22,30 @@ import {
   CampusCategory,
   CampusEventItem,
   SpatialViewLevel,
+  ParsedTimetable,
+  TransitStation,
+  Weekday,
 } from './types';
+import { normalizeParsedTimetable, sessionsForDay } from './lib/timetable';
 import { Calendar, ChevronDown, ChevronUp, Navigation, ArrowRight, Layers } from 'lucide-react';
 
 export default function App() {
+  const [schedule, setSchedule] = useState<TransitStation[]>(TODAY_SCHEDULE);
+  const [scheduleDay, setScheduleDay] = useState<Weekday>('MONDAY');
+
+  useEffect(() => {
+    const saved = localStorage.getItem('campusos.timetable');
+    if (!saved) return;
+    try {
+      const timetable = normalizeParsedTimetable(JSON.parse(saved));
+      const current = sessionsForDay(timetable);
+      setSchedule(current.stations);
+      setScheduleDay(current.day);
+    } catch {
+      localStorage.removeItem('campusos.timetable');
+    }
+  }, []);
+
   // ================= 1. HIERARCHICAL SPATIAL STATE =================
   // Initial demo state: Opens in CAMPUS view
   const [spatialViewLevel, setSpatialViewLevel] = useState<SpatialViewLevel>('CAMPUS');
@@ -198,7 +218,14 @@ export default function App() {
     setMobileContextSheetOpen(true);
   };
 
-  const nextClass = TODAY_SCHEDULE.find((s) => s.status === 'NEXT') || TODAY_SCHEDULE[1];
+  const handleTimetableImported = (timetable: ParsedTimetable) => {
+    const current = sessionsForDay(timetable);
+    setSchedule(current.stations);
+    setScheduleDay(current.day);
+    localStorage.setItem('campusos.timetable', JSON.stringify(timetable));
+  };
+
+  const nextClass = schedule.find((s) => s.status === 'NEXT') || schedule.find((s) => s.status === 'NOW') || schedule[0];
 
   return (
     <div className="w-screen h-screen overflow-hidden bg-[#F2F0E9] text-[#121212] flex flex-col font-sans select-none antialiased">
@@ -217,12 +244,12 @@ export default function App() {
         <div className="flex items-center gap-2 truncate">
           <span className="w-2 h-2 bg-[#F04B23] animate-pulse shrink-0" />
           <span className="text-[#121212] font-semibold truncate">
-            NEXT: {nextClass.subject} (09:30) · LH 406
+            NEXT: {nextClass?.subject || 'NO CLASS'} {nextClass ? `(${nextClass.time}) · ${nextClass.roomCode}` : ''}
           </span>
         </div>
         <button
           type="button"
-          onClick={() => handleLocateRoom(nextClass.roomCode, nextClass.floorId)}
+          onClick={() => nextClass && handleLocateRoom(nextClass.roomCode, nextClass.floorId)}
           className="ml-2 px-2 py-0.5 bg-[#121212] text-[#FFFFFF] text-[10px] font-bold uppercase tracking-wider shrink-0 cursor-pointer"
         >
           LOCATE →
@@ -234,7 +261,8 @@ export default function App() {
         {/* 1. LEFT SCHEDULE RAIL (280px wide on desktop) */}
         <div className="hidden md:block h-full shrink-0">
           <LeftScheduleRail
-            schedule={TODAY_SCHEDULE}
+            schedule={schedule}
+            day={scheduleDay}
             selectedRoomCode={selectedRoom.code}
             onLocateRoom={handleLocateRoom}
           />
@@ -347,7 +375,8 @@ export default function App() {
           {mobileScheduleDrawerOpen && (
             <div className="max-h-72 overflow-y-auto border-t border-[#C9C6BC] bg-[#F2F0E9]">
               <LeftScheduleRail
-                schedule={TODAY_SCHEDULE}
+                schedule={schedule}
+                day={scheduleDay}
                 selectedRoomCode={selectedRoom.code}
                 onLocateRoom={handleLocateRoom}
               />
@@ -394,7 +423,7 @@ export default function App() {
       <UploadTimetableModal
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
-        onSuccess={() => {}}
+        onSuccess={handleTimetableImported}
       />
     </div>
   );

@@ -118,6 +118,38 @@ export interface TransitStation {
   timeRange: string;
 }
 
+export type Weekday = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY';
+
+export interface ParsedTimetableSession {
+  id: string;
+  day: Weekday;
+  startTime: string;
+  endTime: string;
+  subjectCode: string;
+  subjectName: string;
+  faculty: string[];
+  roomCode: string;
+  floorId: string | null;
+  sessionType: 'LECTURE' | 'LAB' | 'TRAINING' | 'OTHER';
+}
+
+export interface ParsedTimetableSubject {
+  code: string;
+  name: string;
+  faculty: string[];
+}
+
+export interface ParsedTimetable {
+  course: string;
+  department: string;
+  semester: string;
+  section: string;
+  defaultRoom: string;
+  subjects: ParsedTimetableSubject[];
+  sessions: ParsedTimetableSession[];
+  warnings: string[];
+}
+
 export interface WayfindingEvent {
   id: string;
   markerNumber?: number;
